@@ -26,7 +26,10 @@ def generateFeatures(filename):
     reviews="";
     for e in raw: 
         #print ((e["review/text"]))
-        reviews = reviews+ (e["review/text"])
+        try:
+            reviews = reviews+ (e["review/text"])
+        except KeyError:
+            pass
     #reviews= [(e["review/text"]) for e in raw]
     #all_words = nltk.word_tokenize(reviews.lower())
 
@@ -72,6 +75,7 @@ def generateFeatures(filename):
     return features
 
 def main():
+    #features = generateFeatures("Books.txt")
     features = generateFeatures("toy.txt")
     print features
 
