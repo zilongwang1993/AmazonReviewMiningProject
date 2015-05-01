@@ -3,6 +3,13 @@ import simplejson
 import generateFeature
 import string
 
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn import tree
+import csv
+
 def countWords(str):
 	count = len(str.split(' '))
 	return count
@@ -25,18 +32,32 @@ def parse(filename):
 	yield entry
 
 
-def main():
-#f = open('../Books.txt')
-	#text features include: review text feature
+
+def getYScore(m,n):
+	a=3.0
+	if n ==0:
+		return 0
+	else:
+		return a*m*m/n
+
+
+def preprocess():
 	textFeatureCnt=1000 
 	#key features include: helpfulness,score, review wordcount,
-	keyFeatureCnt=3
+	keyFeatureCnt=4
 	totalCnt=keyFeatureCnt+textFeatureCnt
 	ftrMatrix=[]
 	raw = parse("toy.txt")
 
 	#use dict and set to speed up text feature values generation
-	reviewF =generateFeature.generateFeatures("toy.txt")
+	preload=True
+	reviewF=[]
+	if preload:
+		with open("textFeatures.txt") as openfileobject:
+			for line in openfileobject:
+				reviewF.append(line.strip())
+	else:
+		reviewF =generateFeature.generateFeatures("toy.txt",1000)
 	reviewSet=set(reviewF)
 	reviewDic={}
 	for i in range(len(reviewF)):
@@ -45,19 +66,38 @@ def main():
 	#get values for each feature
 	for e in raw:
 		entry= getEmptyEntries(totalCnt)
-		entry[0]=int(e["review/helpfulness"][0])
-		entry[1]=int(e["review/score"][0])
+		hp=e["review/helpfulness"].split('/')
+		m=int(hp[0])
+		n=int(hp[1])
+		entry[0]=getYScore(m,n)
+		entry[1]=n
+		entry[2]=int(e["review/score"][0])
 		tempTxt=e["review/text"]
-		entry[2]=countWords(tempTxt)
+		entry[3]=countWords(tempTxt)
 		tempWords = [e for e in map(string.strip, re.split("(\W+)", tempTxt)) if len(e) > 0 and not re.match("\W",e) and not e[0].isupper()]
 		for word in tempWords:
 			if word in reviewSet:
-				entry[3+reviewDic[word]]+=1
+				entry[keyFeatureCnt+reviewDic[word]]+=1
 		ftrMatrix.append(entry)
-	print ftrMatrix
+	#print ftrMatrix[:3]
+	return ftrMatrix
 
-
-
+def main():
+	dataLists = preprocess()
+	dataMatrix=np.array(dataLists)
+	print dataMatrix.shape
+	with open("output.csv", "wb") as f:
+		writer = csv.writer(f)
+		writer.writerows(dataMatrix)
+	#print dataMatrix
+	# Y=dataMatrix[:,0]
+	# X=dataMatrix[:,1:]
+	# print X.shape
+	# print Y.shape
+	# bdt = AdaBoostClassifier(DecisionTreeClassifier(max_depth=1),
+ #                         	algorithm="SAMME",
+ #                         	n_estimators=1)
+	# bdt.fit(X, Y)
 
 
 

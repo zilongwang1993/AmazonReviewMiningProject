@@ -20,7 +20,7 @@ def parse(filename):
 
 
 #need to run nltk.download('all') to download all the files
-def generateFeatures(filename):
+def generateFeatures(filename,cnt):
     raw = parse(filename)
     #raw = parse("smaller.txt")
     reviews="";
@@ -61,7 +61,7 @@ def generateFeatures(filename):
     featureCnt=0 
     features=[]
     for count, word in sorted(items, reverse=True):
-        if featureCnt ==1000:
+        if featureCnt ==cnt:
             break
         wordWithTag=nltk.pos_tag([word])
         if len(wordWithTag[0][1])<2:
@@ -76,8 +76,12 @@ def generateFeatures(filename):
 
 def main():
     #features = generateFeatures("Books.txt")
-    features = generateFeatures("toy.txt")
-    print features
+    features = generateFeatures("toy.txt",1000)
+    #print features
+    f= open("textFeatures.txt",'a')
+    for word in features:
+        f.write(word+'\n')
+    f.close()
 
 if __name__ == '__main__': # If this file is run directly
     main()
